@@ -16,7 +16,7 @@ leo = {
 /* general storage helper */
 leo.util.storage = {
 	read : function( key ){
-		if ( typeof localStorage !== "undefined"){
+		if ( typeof localStorage !== "undefined" && !leo.config.FORCE_USE_COOKIE){
 			return leo.util.ls.read( key );
 		} else {
 			return leo.util.cookie.read( key );
@@ -30,10 +30,24 @@ leo.util.storage = {
 		}		
 	},
 	write : function( key, value ){
-		if ( typeof localStorage !== "undefined" ){
+		if ( typeof localStorage !== "undefined" && !leo.config.FORCE_USE_COOKIE ){
 			leo.util.ls.write( key, value );
 		} else {
 			leo.util.cookie.write( key, value );
+		}
+	},
+	remove : function( key ){
+		if ( typeof localStorage !== "undefined" && !leo.config.FORCE_USE_COOKIE ){
+			leo.util.ls.remove( key, value );
+		} else {
+			leo.util.cookie.remove( key, value );
+		}
+	},
+	removeAll : function(){
+		if ( typeof localStorage !== "undefined" && !leo.config.FORCE_USE_COOKIE ){
+			leo.util.ls.removeAll();
+		} else {
+			leo.util.cookie.removeAll();
 		}
 	}
 }
@@ -60,6 +74,12 @@ leo.util.ls = {
 	},
 	write : function(key,value){
 		localStorage[key] = value;
+	},
+	remove : function( key ){
+		localStorage.removeItem( key );
+	},
+	removeAll : function(){
+		localStorage.clear();
 	}
 }
 
@@ -80,5 +100,14 @@ leo.util.cookie = {
 	},
 	write : function( key, value ){
 		 $.cookie( key, value, { expires: leo.config.EXPIRATION_DATE, path: '/', secure: true });
+	},
+	remove : function( key ){
+		$.cookie( key, "", { expires: -1, path: '/', secure: true });
+	},
+	removeAll : function(){
+		$.each(document.cookie.split(/; */), function()  {
+			var splitCookie = this.split('=');		
+			$.cookie( splitCookie[0] , "", { expires: -1, path: '/', secure: true });			
+		});
 	}
 }
