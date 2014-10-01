@@ -3,7 +3,8 @@
 */
 leo = {
 	config: {
-		EXPIRATION_DATE : 30 // in day unit
+		EXPIRATION_DATE : 30, // in day unit
+		FORCE_USE_COOKIE : true
 	},
 	util : {
 		cookie : {},
@@ -15,23 +16,18 @@ leo = {
 /* general storage helper */
 leo.util.storage = {
 	read : function( key ){
-		if ( typeof localStorage !== "undefined" ){
+		if ( typeof localStorage !== "undefined"){
 			return leo.util.ls.read( key );
 		} else {
 			return leo.util.cookie.read( key );
 		}
 	},
 	readAll : function(){
-		var i = 0;
-		var data = {};
-		var keys = Object.keys(localStorage);
-		
-		for (; i < keys.length; i++) {
-			data[ keys[i] ] = localStorage.getItem( keys[i] );
-		}
-
-		return data;
-		
+		if ( typeof localStorage !== "undefined" && !leo.config.FORCE_USE_COOKIE ){
+			return leo.util.ls.readAll();
+		} else {
+			return leo.util.cookie.readAll();
+		}		
 	},
 	write : function( key, value ){
 		if ( typeof localStorage !== "undefined" ){
@@ -50,6 +46,18 @@ leo.util.ls = {
 		} 
 		return null;
 	},
+	readAll : function(){
+		var i = 0;
+		var data = {};
+		var keys = Object.keys(localStorage);
+		
+		for (; i < keys.length; i++) {
+			data[ keys[i] ] = localStorage.getItem( keys[i] );
+		}
+
+		return data;
+		
+	},
 	write : function(key,value){
 		localStorage[key] = value;
 	}
@@ -62,9 +70,10 @@ leo.util.cookie = {
 		return $.cookie( key );		
 	},
 	readAll : function(){
+		var objectCookie = {};
 		$.each(document.cookie.split(/; */), function()  {
 			var splitCookie = this.split('=');
-			var objectCookie = {};
+			
 			objectCookie[ splitCookie[0] ] = splitCookie[1];				
 		});
 		return objectCookie;
