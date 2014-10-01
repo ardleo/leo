@@ -1,17 +1,21 @@
+/**
+* @namespace leo
+*/
 leo = {
 	config: {
-		EXPIRATION_DATE : 30
+		EXPIRATION_DATE : 30 // in day unit
 	},
-	util = {
+	util : {
 		cookie : {},
 		ls : {},		
 		storage : {}
 	}	
 }
 
+/* general storage helper */
 leo.util.storage = {
 	read : function( key ){
-		if ( Modernizr.localstorage ){
+		if ( typeof localStorage !== "undefined" ){
 			return leo.util.ls.read( key );
 		} else {
 			return leo.util.cookie.read( key );
@@ -29,8 +33,8 @@ leo.util.storage = {
 		return data;
 		
 	},
-	write : function( key ){
-		if ( Modernizr.localstorage ){
+	write : function( key, value ){
+		if ( typeof localStorage !== "undefined" ){
 			leo.util.ls.write( key, value );
 		} else {
 			leo.util.cookie.write( key, value );
@@ -38,6 +42,7 @@ leo.util.storage = {
 	}
 }
 
+/* local storage handler */
 leo.util.ls = {
 	read : function(key){
 		if(typeof(localStorage[key]) !== "undefined") {
@@ -50,6 +55,8 @@ leo.util.ls = {
 	}
 }
 
+
+/* local cookie handler */
 leo.util.cookie = {
 	read : function( key ){
 		return $.cookie( key );		
