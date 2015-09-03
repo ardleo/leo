@@ -65,7 +65,7 @@ leo.util.storage = {
 		}		
 	},
 	write : function( key, value ){
-		var data;
+		var data = key;
 		if ( typeof value == 'object'){
 			data = JSON.stringify(value, function (key, value) {
 				if (typeof value === 'function') {
