@@ -1,12 +1,4 @@
 /**
- * Azure Remote VM Switcher
- * server.js
- *
- * Copyright 2014 Ring2 Communications LTD. All rights reserved.
- */
-
-
-/**
 * @namespace leo
 */
 leo = {
@@ -24,8 +16,8 @@ leo = {
     */
 	config: {
 		EXPIRATION_DATE : 30,
-		FORCE_USE_COOKIE : true,
-		COOKIE_KEY_TO_MOVE_TO_LS : ['number']
+		FORCE_USE_COOKIE : false,
+		COOKIE_KEY_TO_MOVE_TO_LS : []
 	},
 	util : {
 		cookie : {},
@@ -39,10 +31,30 @@ leo.init();
 /* general storage helper */
 leo.util.storage = {
 	read : function( key ){
+		var result;
 		if ( typeof localStorage !== "undefined" && !leo.config.FORCE_USE_COOKIE){
-			return leo.util.ls.read( key );
+			result= leo.util.ls.read( key );
 		} else {
-			return leo.util.cookie.read( key );
+			result= leo.util.cookie.read( key );
+		}
+
+		try {
+			return JSON.parse(result, function (key, value) {
+				if (value
+					&& typeof value === "string"
+					&& value.substr(0, 8) == "function") {
+					var startBody = value.indexOf('{') + 1;
+					var endBody = value.lastIndexOf('}');
+					var startArgs = value.indexOf('(') + 1;
+					var endArgs = value.indexOf(')');
+
+					return new Function(value.substring(startArgs, endArgs)
+						, value.substring(startBody, endBody));
+				}
+				return value;
+			});
+		} catch (exception) {
+			return null;
 		}
 	},
 	readAll : function(){
@@ -53,17 +65,27 @@ leo.util.storage = {
 		}		
 	},
 	write : function( key, value ){
+		var data;
+		if ( typeof value == 'object'){
+			data = JSON.stringify(value, function (key, value) {
+				if (typeof value === 'function') {
+					return value.toString();
+				}
+				return value;
+			});		
+		}
+		
 		if ( typeof localStorage !== "undefined" && !leo.config.FORCE_USE_COOKIE ){
-			leo.util.ls.write( key, value );
+			leo.util.ls.write( key, data );
 		} else {
-			leo.util.cookie.write( key, value );
+			leo.util.cookie.write( key, data );
 		}
 	},
 	remove : function( key ){
 		if ( typeof localStorage !== "undefined" && !leo.config.FORCE_USE_COOKIE ){
-			leo.util.ls.remove( key, value );
+			leo.util.ls.remove( key );
 		} else {
-			leo.util.cookie.remove( key, value );
+			leo.util.cookie.remove( key );
 		}
 	},
 	removeAll : function(){
@@ -142,15 +164,15 @@ leo.util.cookie = {
 		return objectCookie;
 	},
 	write : function( key, value ){
-		 $.cookie( key, value, { expires: leo.config.EXPIRATION_DATE, path: '/', secure: true });
+		 $.cookie( key, value, { expires: leo.config.EXPIRATION_DATE, path: '/' });
 	},
 	remove : function( key ){
-		$.cookie( key, "", { expires: -1, path: '/', secure: true });
+		$.cookie( key, "", { expires: -1, path: '/' });
 	},
 	removeAll : function(){
 		$.each(document.cookie.split(/; */), function()  {
 			var splitCookie = this.split('=');		
-			$.cookie( splitCookie[0] , "", { expires: -1, path: '/', secure: true });			
+			$.cookie( splitCookie[0] , "", { expires: -1, path: '/' });			
 		});
 	}
 }
